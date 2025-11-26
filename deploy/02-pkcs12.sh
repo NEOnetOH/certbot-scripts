@@ -38,12 +38,6 @@ if [[ -z "$RENEWED_DOMAINS" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$RENEWED_LINEAGE/deploy.json" ]]; then
-  log "ERROR: deploy.json does not exist"
-  exit 1
-fi
-
-
 jq -e '.pkcs12' "$RENEWED_LINEAGE/deploy.json" > /dev/null 2>&1
 if [ $? -eq 0 ]; then
   # Create array from RENEWED_DOMAINS
