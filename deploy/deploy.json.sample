@@ -1,0 +1,37 @@
+{
+  "pkcs12": {
+    "pfxPass": "",
+    "pfxPath": "/path/to/pfxFile",
+    "pfxFile": "letsencrypt.pfx",
+    "pfxUser": "root",
+    "pfxGroup": "root",
+    "pfxMode": "440"
+  },
+  "clearPass": {
+    "Host": "clearpass-host.domain.org",
+    "AuthEndpoint": "api/oauth",
+    "UUIDEndpoint": "api/cluster/server",
+    "AuthCreds": {
+      "grant_type": "password",
+      "client_id": "client_id from ClearPass API",
+      "client_secret": "client_secret from ClearPass API",
+      "username": "username from ClearPass API",
+      "password": "password from ClearPass API",
+      "scope": "",
+      "refresh_token": ""
+    },
+    "CertURI": [
+      "/api/server-cert/name/$uuid/HTTPS(RSA)",
+      "/api/server-cert/name/$uuid/RADIUS"
+    ]
+  },
+  "technitium": {
+    "user": "certbot user",
+    "pass": "certbot pass"
+  },
+  "webCertStore": {
+    "host": "web-certstore.domain.org",
+    "port": "443",
+    "uri": "/certstore/"
+  }
+}
