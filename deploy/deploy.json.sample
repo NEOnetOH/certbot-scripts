@@ -33,5 +33,18 @@
     "host": "web-certstore.domain.org",
     "port": "443",
     "uri": "/certstore/"
+  },
+  "rsync": {
+    "host": "rsync.domain.org",
+    "port": "22",
+    "user": "user",
+    "pass": "pass",
+    "dstPath": "/path/to/cert",
+    "dstPubFile": "cert.pem",
+    "dstPubUser": "www-data",
+    "dstPubGroup": "www-data",
+    "dstPrivFile": "privkey.pem",
+    "dstPrivUser": "root",
+    "dstPrivGroup": "root"
   }
 }
