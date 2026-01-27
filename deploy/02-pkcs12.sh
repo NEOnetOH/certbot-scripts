@@ -99,6 +99,11 @@ if [ $? -eq 0 ]; then
   PRIVKEY_FILE="$RENEWED_LINEAGE/privkey.pem"
   CERT_FILE="$RENEWED_LINEAGE/cert.pem"
   CHAIN_FILE="$RENEWED_LINEAGE/chain.pem"
+  ROOT_FILE="/etc/ssl/certs/ISRG_Root_X1.pem"
+  ORDERED_FILE=$(mktemp)
+  
+  # Output the full chain, including root in proper order
+  cat $CERT_FILE $CHAIN_FILE $ROOT_FILE > $ORDERED_FILE
 
   # Generate 20-char alphanumeric password
   EXPORTPASS=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20)
@@ -107,7 +112,7 @@ if [ $? -eq 0 ]; then
   jq --arg pass "$EXPORTPASS" '.pkcs12.pfxPass = $pass' "$RENEWED_LINEAGE/deploy.json" > "$RENEWED_LINEAGE/deploy.tmp"
   mv "$RENEWED_LINEAGE/deploy.tmp" "$RENEWED_LINEAGE/deploy.json"
 
-  openssl pkcs12 -export -inkey $PRIVKEY_FILE -in $CERT_FILE -certfile $FULLCHAIN_FILE -out $PFX_FILE -passout pass:$EXPORTPASS
+  openssl pkcs12 -export -inkey $PRIVKEY_FILE -in $ORDERED_FILE -out $PFX_FILE -passout pass:$EXPORTPASS
 
   chown $PFX_USER:$PFX_GROUP $PFX_FILE
   chmod $PFX_MODE $PFX_FILE
