@@ -15,7 +15,8 @@
 #  # RENEWED_DOMAINS=demo.neonet.org RENEWED_LINEAGE=/etc/letsencrypt/live/demo.neonet.org ./02-pkcs12.sh
 #
 #  .NOTES
-#  Created 2025-11-26 by Nate Coffey
+#  Created  2025-11-26 by Nate Coffey
+#  Modified 2026-01-27 by Nate Coffey
 #
 #  .EXITCODES
 #  1 - Initialization Error
@@ -106,7 +107,7 @@ if [ $? -eq 0 ]; then
   jq --arg pass "$EXPORTPASS" '.pkcs12.pfxPass = $pass' "$RENEWED_LINEAGE/deploy.json" > "$RENEWED_LINEAGE/deploy.tmp"
   mv "$RENEWED_LINEAGE/deploy.tmp" "$RENEWED_LINEAGE/deploy.json"
 
-  openssl pkcs12 -export -inkey $PRIVKEY_FILE -in $FULLCHAIN_FILE -out $PFX_FILE -passout pass:$EXPORTPASS
+  openssl pkcs12 -export -inkey $PRIVKEY_FILE -in $CERT_FILE -certfile $FULLCHAIN_FILE -out $PFX_FILE -passout pass:$EXPORTPASS
 
   chown $PFX_USER:$PFX_GROUP $PFX_FILE
   chmod $PFX_MODE $PFX_FILE
