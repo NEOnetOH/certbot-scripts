@@ -118,12 +118,12 @@ if [ $? -eq 0 ]; then
   for uri in "${CERT_URI[@]}"
   do
     # Run curl using a HEREDOC, delimited by EOF in JSON format
-    curl https://$API_HOST:443$uri -X PUT -H "Authorization: Bearer $API_ACCESS_TOKEN" -H "Content-Type: application/json" -d @- >/dev/null 2>&1 << EOF
-{
-  "pkcs12_file_url": "https://$WEB_HOST:$WEB_PORT$WEB_URI$PFX_FILENAME",
-  "pkcs12_passphrase": "$PFX_PASS"
-}
-EOF
+    curl https://$API_HOST:443$uri -X PUT -H "Authorization: Bearer $API_ACCESS_TOKEN" -H "Content-Type: application/json" -d @- >/dev/null 2>&1 <<-EOF
+	{
+	  "pkcs12_file_url": "https://$WEB_HOST:$WEB_PORT$WEB_URI$PFX_FILENAME",
+	  "pkcs12_passphrase": "$PFX_PASS"
+	}
+	EOF
   done
 
   log "=== Certbot ArubaCP Completed Successfully ==="
