@@ -180,9 +180,6 @@ if [ $? -eq 0 ]; then
       exit 4
     fi
   fi
-  
-fi
-  
 
   log "=== Certbot Rsync Completed Successfully ==="
 else
