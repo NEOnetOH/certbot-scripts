@@ -39,12 +39,15 @@
     "port": "22",
     "user": "user",
     "pass": "pass",
-    "dstPath": "/path/to/cert",
+    "dstPubPath": "/path/to/cert",
     "dstPubFile": "cert.pem",
     "dstPubUser": "www-data",
     "dstPubGroup": "www-data",
+    "dstPubMode": "0644",
+    "dstPrivPath": "/path/to/key",
     "dstPrivFile": "privkey.pem",
     "dstPrivUser": "root",
-    "dstPrivGroup": "root"
+    "dstPrivGroup": "root",
+    "dstPrivMode": "0600"
   }
 }
