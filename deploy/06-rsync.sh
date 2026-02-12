@@ -116,7 +116,7 @@ if [ $? -eq 0 ]; then
   fi
 
   # rsync public key to server
-  if ! sshpass -p "$RSYNC_PASS" rsync -avzL -e "$SSH_CMD" \
+  if ! sshpass -p "$RSYNC_PASS" rsync -azL -e "$SSH_CMD" \
        "$RENEWED_LINEAGE/cert.pem" \
        "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}"; then
     echo "Error: Failed to copy cert.pem to ${RSYNC_HOST}:${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}" >&2
@@ -148,7 +148,7 @@ if [ $? -eq 0 ]; then
   fi
 
   # rsync private key to server
-  if ! sshpass -p "$RSYNC_PASS" rsync -avzL -e "$SSH_CMD" \
+  if ! sshpass -p "$RSYNC_PASS" rsync -azL -e "$SSH_CMD" \
        "$RENEWED_LINEAGE/privkey.pem" \
        "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}"; then
     echo "Error: Failed to copy privkey.pem to ${RSYNC_HOST}:${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}" >&2

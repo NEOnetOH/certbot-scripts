@@ -48,6 +48,7 @@
     "dstPrivFile": "privkey.pem",
     "dstPrivUser": "root",
     "dstPrivGroup": "root",
-    "dstPrivMode": "0600"
+    "dstPrivMode": "0600",
+    "dstCommand": "sh -c 'ls -l /etc'"
   }
 }
