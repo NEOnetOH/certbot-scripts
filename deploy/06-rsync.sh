@@ -48,10 +48,11 @@ if [ $? -eq 0 ]; then
     "rsync.host"
     "rsync.user"
     "rsync.pass"
-    "rsync.dstPath"
+    "rsync.dstPubPath"
     "rsync.dstPubFile"
     "rsync.dstPubUser"
     "rsync.dstPubGroup"
+    "rsync.dstPrivPath"
     "rsync.dstPrivFile"
     "rsync.dstPrivUser"
     "rsync.dstPrivGroup"
@@ -88,81 +89,96 @@ if [ $? -eq 0 ]; then
   RSYNC_DSTPRIVMODE=$(jq  -r .rsync.dstPrivMode  "$RENEWED_LINEAGE/deploy.json")
   RSYNC_DSTCOMMAND=$(jq   -r .rsync.dstCommand   "$RENEWED_LINEAGE/deploy.json")
   
-  # Test rsync connection
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" -o BatchMode=no -o ConnectTimeout=10 \
-    "${RSYNC_USER}@${RSYNC_HOST}" exit 2>/dev/null; then
+  # Test SSH connection to rsync host
+  SSH_PORT_ARG=""
+  if [ -n "$RSYNC_PORT" ] && [ "$RSYNC_PORT" != "null" ]; then
+    SSH_PORT_ARG="-p $RSYNC_PORT"
+  fi
+
+  if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG -o BatchMode=no -o ConnectTimeout=10 \
+       "${RSYNC_USER}@${RSYNC_HOST}" exit 2>/dev/null; then
     echo "Error: Failed to connect to rsync host ${RSYNC_HOST}:${RSYNC_PORT}" >&2
-    #exit 4
+    exit 4
+  fi
+  
+  # Set up SSH command with optional port
+  SSH_CMD="ssh"
+  if [ -n "$RSYNC_PORT" ] && [ "$RSYNC_PORT" != "null" ]; then
+    SSH_CMD="ssh -p $RSYNC_PORT"
   fi
   
   # Backup and copy public certificate
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" \
+  if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG \
        "${RSYNC_USER}@${RSYNC_HOST}" \
        "if [ -f ${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE} ]; then mv ${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE} ${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}.\$(date -r ${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE} +%Y%m%d-%H%M); fi"; then
     echo "Error: Failed to backup existing cert file on ${RSYNC_HOST}" >&2
-    #exit 4
+    exit 4
   fi
 
-  if ! sshpass -p "$RSYNC_PASS" rsync -avzL -e "ssh -p $RSYNC_PORT" \
+  # rsync public key to server
+  if ! sshpass -p "$RSYNC_PASS" rsync -avzL -e "$SSH_CMD" \
        "$RENEWED_LINEAGE/cert.pem" \
        "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}"; then
     echo "Error: Failed to copy cert.pem to ${RSYNC_HOST}:${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}" >&2
-    #exit 4
+    exit 4
   fi
 
   # Set ownership on public certificate
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" \
+  if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG \
        "${RSYNC_USER}@${RSYNC_HOST}" \
        "chown ${RSYNC_DSTPUBUSER}:${RSYNC_DSTPUBGROUP} ${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}"; then
     echo "Error: Failed to set ownership on ${RSYNC_HOST}:${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}" >&2
-    #exit 4
+    exit 4
   fi
 
   # Set permissions on public certificate
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" \
+  if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG \
        "${RSYNC_USER}@${RSYNC_HOST}" \
        "chmod ${RSYNC_DSTPUBMODE} ${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}"; then
     echo "Error: Failed to set permissions on ${RSYNC_HOST}:${RSYNC_DSTPUBPATH}/${RSYNC_DSTPUBFILE}" >&2
-    #exit 4
+    exit 4
   fi
 
   # Backup and copy private key
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" \
+  if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG \
        "${RSYNC_USER}@${RSYNC_HOST}" \
        "if [ -f ${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE} ]; then mv ${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE} ${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}.\$(date -r ${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE} +%Y%m%d-%H%M); fi"; then
     echo "Error: Failed to backup existing private key file on ${RSYNC_HOST}" >&2
-    #exit 4
+    exit 4
   fi
 
-  if ! sshpass -p "$RSYNC_PASS" rsync -avzL -e "ssh -p $RSYNC_PORT" \
+  # rsync private key to server
+  if ! sshpass -p "$RSYNC_PASS" rsync -avzL -e "$SSH_CMD" \
        "$RENEWED_LINEAGE/privkey.pem" \
        "${RSYNC_USER}@${RSYNC_HOST}:${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}"; then
     echo "Error: Failed to copy privkey.pem to ${RSYNC_HOST}:${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}" >&2
-    #exit 4
+    exit 4
   fi
 
   # Set ownership on private key
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" \
+  if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG \
        "${RSYNC_USER}@${RSYNC_HOST}" \
        "chown ${RSYNC_DSTPRIVUSER}:${RSYNC_DSTPRIVGROUP} ${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}"; then
     echo "Error: Failed to set ownership on ${RSYNC_HOST}:${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}" >&2
-    #exit 4
+    exit 4
   fi
 
   # Set permissions on private key
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" \
+  if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG \
        "${RSYNC_USER}@${RSYNC_HOST}" \
        "chmod ${RSYNC_DSTPRIVMODE} ${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}"; then
     echo "Error: Failed to set permissions on ${RSYNC_HOST}:${RSYNC_DSTPRIVPATH}/${RSYNC_DSTPRIVFILE}" >&2
-    #exit 4
+    exit 4
   fi
 
-  # Execute remote command
-  if ! sshpass -p "$RSYNC_PASS" ssh -p "$RSYNC_PORT" \
-       "${RSYNC_USER}@${RSYNC_HOST}" \
-       "${RSYNC_DSTCOMMAND}"; then
-    echo "Error: Failed to execute remote command on ${RSYNC_HOST}: ${RSYNC_DSTCOMMAND}" >&2
-    #exit 4
+  # Execute remote command (if specified)
+  if [ -n "$RSYNC_DSTCOMMAND" ] && [ "$RSYNC_DSTCOMMAND" != "null" ]; then
+    if ! sshpass -p "$RSYNC_PASS" ssh $SSH_PORT_ARG \
+         "${RSYNC_USER}@${RSYNC_HOST}" \
+         "${RSYNC_DSTCOMMAND}"; then
+      echo "Error: Failed to execute remote command on ${RSYNC_HOST}: ${RSYNC_DSTCOMMAND}" >&2
+      exit 4
+    fi
   fi
   
 fi
